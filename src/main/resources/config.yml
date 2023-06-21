@@ -1,0 +1,29 @@
+database:
+  host: "localhost"
+  port: 3306
+  user: "coincraft"
+  password: "password"
+  database: "coincraft"
+  prefix: "ccc_"
+server:
+  #Varování: Tato sekce nesmí být po prvním nastavení změněna nebo přestanou všechny stávající shopy na serveru fungovat
+  id: "server"
+  name: "server"
+economy:
+  #Pište v procentech hodnoty 1-100 bez znaku %, (0 pro vypnutí daně)
+  shop_tax: 0
+  current_central_money: 0
+discord:
+  enabled: false
+  token: "DISCORD SECRET HERE"
+  roles:
+    booster: null
+    lite: null
+    premium: null
+    ultimate: null
+    technik: null
+    moderator: null
+    elita: null
+api:
+  url: ""
+
