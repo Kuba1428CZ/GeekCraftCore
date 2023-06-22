@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jetbrains.annotations.NotNull;
+
 
 import java.util.ArrayList;
 
@@ -19,6 +19,7 @@ public class pravitkocrafting{
     private static void createPravitko() {
         ItemStack stick = new ItemStack(Material.BONE);
         ItemMeta stickmeta = stick.getItemMeta();
+        assert stickmeta != null;
         stickmeta.setDisplayName(ChatColor.YELLOW + "Pravítko");
         stickmeta.addEnchant(Enchantment.DURABILITY, 69, true);
         stickmeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);

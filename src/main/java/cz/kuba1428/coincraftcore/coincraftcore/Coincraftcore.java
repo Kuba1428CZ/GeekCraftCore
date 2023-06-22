@@ -14,28 +14,27 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Objects;
 import java.util.logging.Logger;
-import net.milkbowl.vault.chat.Chat;
-import net.milkbowl.vault.economy.Economy;
 
 
 public final class Coincraftcore extends JavaPlugin {
-    private static JDA bot;
     private static final Logger log = Logger.getLogger("Minecraft");
     private static Economy econ = null;
-    private static final Chat chat = null;
     @Override
     public void onEnable() {
         if (getConfig().getBoolean("discord.enabled")){
             try {
-                bot = JDABuilder.createDefault(getConfig().getString("discord.token"))
+                JDA bot = JDABuilder.createDefault(getConfig().getString("discord.token"))
                         .setStatus(OnlineStatus.ONLINE)
                         .setActivity(Activity.watching("tě ve spánku >:)"))
                         .addEventListeners(new player())
@@ -52,6 +51,7 @@ public final class Coincraftcore extends JavaPlugin {
                             .queue();
                     botguild.upsertCommand("hlasovani", "spustí hlasování pouze pro hráče serveru")
                             .addOption(OptionType.STRING, "popis","popis toho o čem se hlasuje",  true)
+                            .addOption(OptionType.INTEGER, "trvani", "Doba trvání ankety (v minutách)", true)
                             .queue();
                     botguild.upsertCommand("verify", "propojí mc účet s discordem")
                             .queue();
@@ -90,9 +90,9 @@ public final class Coincraftcore extends JavaPlugin {
         pm.registerEvents(new upravaParametruShop() , this);
 
         //getCommand("dmsg").setExecutor(new dmsg());
-        getCommand("shop").setExecutor(new shop());
-        getCommand("verejne-prostredky").setExecutor(new verejneProstredky());
-        getCommand("shop").setTabCompleter(new shopcompleter());
+        Objects.requireNonNull(getCommand("shop")).setExecutor(new shop());
+        Objects.requireNonNull(getCommand("verejne-prostredky")).setExecutor(new verejneProstredky());
+        Objects.requireNonNull(getCommand("shop")).setTabCompleter(new shopcompleter());
         //getCommand("dmsg").setTabCompleter(new dmsgcompleter());
         FileConfiguration config = this.getConfig();
         String user = config.getString("database.user");

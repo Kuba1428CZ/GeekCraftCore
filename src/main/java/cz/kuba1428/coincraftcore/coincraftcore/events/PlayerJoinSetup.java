@@ -1,13 +1,10 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
+
 import cz.kuba1428.coincraftcore.coincraftcore.Coincraftcore;
-import cz.kuba1428.coincraftcore.coincraftcore.misc.UpdateBalance;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
-import net.luckperms.api.model.data.DataMutateResult;
 import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeType;
-import net.luckperms.api.node.types.InheritanceNode;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,7 +14,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
@@ -40,7 +36,7 @@ public class PlayerJoinSetup implements Listener {
                 ResultSet rs = stmnt.executeQuery(statement);
                 while (rs.next()){
                     Random rand = new Random();
-                    Integer randominteger = rand.nextInt(900000) + 100000;
+                    int randominteger = rand.nextInt(900000) + 100000;
                     String kickmsg = "&9&lGeek&f&lCraft"
                             + "\n"
                             + "\n&6&lTENTO SERVER JE POUZE PRO ČLENY"
@@ -71,24 +67,19 @@ public class PlayerJoinSetup implements Listener {
                         Player player = event.getPlayer();
                         UUID uuid = player.getUniqueId();
                         User user = lp.getUserManager().getUser(uuid);
+                        assert user != null;
                         user.data().clear(NodeType.INHERITANCE::matches);
-                        InheritanceNode node = InheritanceNode.builder(rs.getString("rank")).value(true).build();
-                        DataMutateResult result = user.data().add(node);
                         lp.getUserManager().saveUser(user);
                         plugin.getLogger().info("aaaa" + rs.getString("rank"));
                     }
                 }
-            }catch (SQLException e){
-                throw new RuntimeException(e);
-            } catch (ClassNotFoundException e) {
+            }catch (SQLException | ClassNotFoundException e){
                 throw new RuntimeException(e);
             }
-        }catch (SQLException e){
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+            connection.close();
+        }catch (SQLException | ClassNotFoundException e){
             throw new RuntimeException(e);
         }
-
 
     }
 
@@ -100,9 +91,8 @@ public class PlayerJoinSetup implements Listener {
             Statement stmnt = connection.createStatement();
             String statement = "UPDATE " + config.getString("database.prefix") + "users SET money = " + economy.getBalance(player) + " WHERE nick='" + player.getName() + "'";
             stmnt.executeUpdate(statement);
-        }catch (SQLException e){
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+            connection.close();
+        }catch (SQLException | ClassNotFoundException e){
             throw new RuntimeException(e);
         }
 

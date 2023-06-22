@@ -5,4 +5,5 @@ import java.util.HashMap;
 
 public interface hlasovaniStorage {
     HashMap<String, ArrayList<Integer>> hlasovaniData = new HashMap<>();
+    HashMap<String, ArrayList<String>> hlasujici = new HashMap<>();
 }
