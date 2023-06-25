@@ -8,10 +8,10 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import org.jetbrains.annotations.NotNull;
 
-public class verify extends ListenerAdapter {
+public class Verify extends ListenerAdapter {
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
 
-        if (event.getName().equals("verify")){
+        if (event.getName().equals("verify")) {
 
             TextInput subject = TextInput.create("code", "kód", TextInputStyle.SHORT)
                     .setPlaceholder("Kód získáš připojením na server")

@@ -10,12 +10,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 
-
 import java.util.ArrayList;
 
-public class pravitkocrafting{
+public class RulerCrafting {
     public static ItemStack pravitkostack;
-    public static void init(){createPravitko();}
+
+    public static void init() {
+        createPravitko();
+    }
+
     private static void createPravitko() {
         ItemStack stick = new ItemStack(Material.BONE);
         ItemMeta stickmeta = stick.getItemMeta();
