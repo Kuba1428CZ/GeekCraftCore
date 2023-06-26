@@ -1,12 +1,24 @@
 package cz.kuba1428.coincraftcore.coincraftcore;
 
-import cz.kuba1428.coincraftcore.coincraftcore.commands.shop;
-import cz.kuba1428.coincraftcore.coincraftcore.commands.verejneProstredky;
-import cz.kuba1428.coincraftcore.coincraftcore.completers.shopcompleter;
-import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.*;
-import cz.kuba1428.coincraftcore.coincraftcore.discord.events.verifyreply;
-import cz.kuba1428.coincraftcore.coincraftcore.events.*;
-import cz.kuba1428.coincraftcore.coincraftcore.recipes.pravitkocrafting;
+import cz.kuba1428.coincraftcore.coincraftcore.commands.PublicResources;
+import cz.kuba1428.coincraftcore.coincraftcore.commands.Shop;
+import cz.kuba1428.coincraftcore.coincraftcore.completers.ShopCompleter;
+import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Online;
+import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Player;
+import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Shops;
+import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Verify;
+import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Voting;
+import cz.kuba1428.coincraftcore.coincraftcore.discord.events.VerifyReply;
+import cz.kuba1428.coincraftcore.coincraftcore.events.EditShopParameter;
+import cz.kuba1428.coincraftcore.coincraftcore.events.LogikaPravitka;
+import cz.kuba1428.coincraftcore.coincraftcore.events.PlayerJoinSetup;
+import cz.kuba1428.coincraftcore.coincraftcore.events.PlayerLeaves;
+import cz.kuba1428.coincraftcore.coincraftcore.events.PravitkoCancelBreak;
+import cz.kuba1428.coincraftcore.coincraftcore.events.ShopBreak;
+import cz.kuba1428.coincraftcore.coincraftcore.events.ShopClickHandle;
+import cz.kuba1428.coincraftcore.coincraftcore.events.ShopGuiMonitor;
+import cz.kuba1428.coincraftcore.coincraftcore.events.ShopStorageUpdate;
+import cz.kuba1428.coincraftcore.coincraftcore.recipes.RulerCrafting;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -27,30 +39,31 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 
-public final class Coincraftcore extends JavaPlugin {
+public final class CoincraftCore extends JavaPlugin {
     private static final Logger log = Logger.getLogger("Minecraft");
     private static Economy econ = null;
+
     @Override
     public void onEnable() {
-        if (getConfig().getBoolean("discord.enabled")){
+        if (getConfig().getBoolean("discord.enabled")) {
             try {
                 JDA bot = JDABuilder.createDefault(getConfig().getString("discord.token"))
                         .setStatus(OnlineStatus.ONLINE)
                         .setActivity(Activity.watching("tě ve spánku >:)"))
-                        .addEventListeners(new player())
-                        .addEventListeners(new verify())
-                        .addEventListeners(new online())
-                        .addEventListeners(new verifyreply())
-                        .addEventListeners(new shops())
-                        .addEventListeners(new hlasovani())
+                        .addEventListeners(new Player())
+                        .addEventListeners(new Verify())
+                        .addEventListeners(new Online())
+                        .addEventListeners(new VerifyReply())
+                        .addEventListeners(new Shops())
+                        .addEventListeners(new Voting())
                         .build().awaitReady();
-                Guild botguild =  bot.getGuildById("1038506223542222928");
-                if (botguild != null){
+                Guild botguild = bot.getGuildById("1038506223542222928");
+                if (botguild != null) {
                     botguild.upsertCommand("player", "zobrazí informace o hráči")
-                            .addOption(OptionType.STRING, "nick","nick hrace",  true)
+                            .addOption(OptionType.STRING, "nick", "nick hrace", true)
                             .queue();
                     botguild.upsertCommand("hlasovani", "spustí hlasování pouze pro hráče serveru")
-                            .addOption(OptionType.STRING, "popis","popis toho o čem se hlasuje",  true)
+                            .addOption(OptionType.STRING, "popis", "popis toho o čem se hlasuje", true)
                             .addOption(OptionType.INTEGER, "trvani", "Doba trvání ankety (v minutách)", true)
                             .queue();
                     botguild.upsertCommand("verify", "propojí mc účet s discordem")
@@ -59,20 +72,20 @@ public final class Coincraftcore extends JavaPlugin {
                             .queue();
                     botguild.upsertCommand("shoplist", "zobrazí shopy na serveru")
                             .addOptions(
-                                    new OptionData(OptionType.STRING, "typ" , "specifikovat typ obchodu",true)
+                                    new OptionData(OptionType.STRING, "typ", "specifikovat typ obchodu", true)
                                             .addChoice("Prodej", "prodej")
                                             .addChoice("Výkup", "výkup")
                             )
-                            .addOption(OptionType.STRING, "item","spicifikovat item",  false)
-                            .addOption(OptionType.STRING, "majitel","specifikovat majitele obchodu",  false)
+                            .addOption(OptionType.STRING, "item", "spicifikovat item", false)
+                            .addOption(OptionType.STRING, "majitel", "specifikovat majitele obchodu", false)
                             .queue();
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-        pravitkocrafting.init();
-        if (!setupEconomy() ) {
+        RulerCrafting.init();
+        if (!setupEconomy()) {
             log.severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -87,12 +100,12 @@ public final class Coincraftcore extends JavaPlugin {
         pm.registerEvents(new ShopGuiMonitor(), this);
         pm.registerEvents(new LogikaPravitka(), this);
         pm.registerEvents(new PlayerJoinSetup(), this);
-        pm.registerEvents(new upravaParametruShop() , this);
+        pm.registerEvents(new EditShopParameter(), this);
 
         //getCommand("dmsg").setExecutor(new dmsg());
-        Objects.requireNonNull(getCommand("shop")).setExecutor(new shop());
-        Objects.requireNonNull(getCommand("verejne-prostredky")).setExecutor(new verejneProstredky());
-        Objects.requireNonNull(getCommand("shop")).setTabCompleter(new shopcompleter());
+        Objects.requireNonNull(getCommand("shop")).setExecutor(new Shop());
+        Objects.requireNonNull(getCommand("verejne-prostredky")).setExecutor(new PublicResources());
+        Objects.requireNonNull(getCommand("shop")).setTabCompleter(new ShopCompleter());
         //getCommand("dmsg").setTabCompleter(new dmsgcompleter());
         FileConfiguration config = this.getConfig();
         String user = config.getString("database.user");
@@ -102,7 +115,7 @@ public final class Coincraftcore extends JavaPlugin {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection connection = DriverManager.getConnection(url, user, password);
             Statement statement = connection.createStatement();
-            statement.executeUpdate("create table IF NOT EXISTS `"+ config.getString("database.prefix")+"users` (\n" +
+            statement.executeUpdate("create table IF NOT EXISTS `" + config.getString("database.prefix") + "users` (\n" +
                     "  `id` int unsigned not null auto_increment primary key,\n" +
                     "  `nick` VARCHAR(255) not null UNIQUE,\n" +
                     "  `money` INT not null default 0,\n" +
@@ -133,8 +146,8 @@ public final class Coincraftcore extends JavaPlugin {
                     "  `id` int unsigned not null auto_increment primary key,\n" +
                     "  `nick` VARCHAR(255) not null\n" +
                     ")");
-        statement.close();
-        }catch (Exception e){
+            statement.close();
+        } catch (Exception e) {
             getLogger().warning("Nastaly problémy při připojování k databázi: " + e);
         }
         getLogger().info("Coin Craft Core sucessfully enabled!");
@@ -144,15 +157,16 @@ public final class Coincraftcore extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
     }
-    public boolean isInteger( String input ) {
+
+    public boolean isInteger(String input) {
         try {
-            Integer.parseInt( input );
+            Integer.parseInt(input);
             return true;
-        }
-        catch( Exception e ) {
+        } catch (Exception e) {
             return false;
         }
     }
+
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return false;
@@ -168,8 +182,6 @@ public final class Coincraftcore extends JavaPlugin {
     public static Economy getEconomy() {
         return econ;
     }
-
-
 
 
 }

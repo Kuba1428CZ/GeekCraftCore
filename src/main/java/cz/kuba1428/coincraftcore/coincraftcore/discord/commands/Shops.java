@@ -1,6 +1,10 @@
 package cz.kuba1428.coincraftcore.coincraftcore.discord.commands;
 
-import cz.kuba1428.coincraftcore.coincraftcore.Coincraftcore;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -11,10 +15,6 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.jetbrains.annotations.NotNull;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.json.simple.JSONObject;
 
 import java.awt.*;
@@ -22,34 +22,33 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Objects;
 
-public class shops extends ListenerAdapter {
-
-
+public class Shops extends ListenerAdapter {
 
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event)  {
-        if (event.getName().equals("shoplist")){
-            Coincraftcore plugin = Coincraftcore.getPlugin(Coincraftcore.class);
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        if (event.getName().equals("shoplist")) {
+            CoincraftCore plugin = CoincraftCore.getPlugin(CoincraftCore.class);
             FileConfiguration config = plugin.getConfig();
             // Define API endpoint URL with required parameters
             OptionMapping typ = event.getOption("typ");
             String args = "&sc1=shop_type&sv1=" + typ.getAsString();
-            if (event.getOption("item") != null){
+            if (event.getOption("item") != null) {
                 args += "&sc2=material&sv2=" + Objects.requireNonNull(event.getOption("item")).getAsString().toUpperCase().replace(' ', '_');
             }
-            if (event.getOption("majitel") != null){
+            if (event.getOption("majitel") != null) {
                 args += "&sc3=owner&sv3=" + event.getOption("majitel").getAsString().toUpperCase().replace(' ', '_');
 
             }
             String endpointUrl = "https://mc.geekboy.cz/api/getshops.php?columns=id,material,shop_location_encoded,owner,price,count,items_in_storage&sort=material&limit=10" + args;
             try {
                 // Create URL object for the page you want to get content from
-                URL url = new URL(endpointUrl);
+                URL url = new URI(endpointUrl).toURL();
                 // Create HttpURLConnection object to send HTTP request
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 // Set request method and other properties
@@ -65,7 +64,7 @@ public class shops extends ListenerAdapter {
                 }
                 in.close();
                 EmbedBuilder eb = new EmbedBuilder();
-                if (!response.toString().equals("No data found")){
+                if (!response.toString().equals("No data found")) {
                     eb.setTitle("Obchody odpovídající hledání:");
                     eb.setColor(new Color(15, 118, 187));
                     Gson gson = new Gson();
@@ -81,10 +80,10 @@ public class shops extends ListenerAdapter {
                         Location location = (Location) is.readObject();
                         String owner = jsonObject.get("owner").getAsString();
                         int items_in_storage = jsonObject.get("items_in_storage").getAsInt();
-                        eb.addField(material.replace('_', ' '), "💵 Cena: `" + price + "$ za " + count + "ks`\n🔗 Majitel: `" + owner + "`\n📦 Kusů na skladě: `" + items_in_storage + "`\n[zobrazit na mapě](https://map.majnr.cz/?worldname="+ location.getWorld().getName() +"&mapname=surface&zoom=7&x="+ location.getX()+"&y=" + location.getY() +"&z="+ location.getZ()+")", true);
+                        eb.addField(material.replace('_', ' '), "💵 Cena: `" + price + "$ za " + count + "ks`\n🔗 Majitel: `" + owner + "`\n📦 Kusů na skladě: `" + items_in_storage + "`\n[zobrazit na mapě](https://map.majnr.cz/?worldname=" + location.getWorld().getName() + "&mapname=surface&zoom=7&x=" + location.getX() + "&y=" + location.getY() + "&z=" + location.getZ() + ")", true);
 
                     }
-                    if (jsonArray.size() < 10){
+                    if (jsonArray.size() < 10) {
                         event.replyEmbeds(eb.build())
                                 .addActionRow(
                                         Button.primary("previous", "◄")
@@ -95,7 +94,7 @@ public class shops extends ListenerAdapter {
                                                 .asDisabled()
                                 )
                                 .queue();
-                    }else{
+                    } else {
                         JSONObject nextbuttonjson = new JSONObject();
                         nextbuttonjson.put("p", "1");
                         nextbuttonjson.put("a", args);
@@ -105,12 +104,12 @@ public class shops extends ListenerAdapter {
                                                 .asDisabled(),
                                         Button.secondary("pagecount", "Strana 1")
                                                 .asDisabled(),
-                                        Button.primary( "nsl" + nextbuttonjson.toJSONString(), "►")
+                                        Button.primary("nsl" + nextbuttonjson.toJSONString(), "►")
 
                                 )
                                 .queue();
                     }
-                }else{
+                } else {
                     eb.setTitle("⚠️ žádné obchody");
                     eb.setDescription("nebyly nalezeny žádné obchody s těmito parametry");
                     eb.setColor(Color.YELLOW);
@@ -127,37 +126,36 @@ public class shops extends ListenerAdapter {
                 }
 
 
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
 
-
         }
     }
+
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        if (event.getComponentId().contains("nsl") || event.getComponentId().contains("psl")){
+        if (event.getComponentId().contains("nsl") || event.getComponentId().contains("psl")) {
             Gson gson = new Gson();
             String jsonstring;
             int page;
             JsonObject nextbuttonjsongrabbed;
-            if (event.getComponentId().contains("psl")){
+            if (event.getComponentId().contains("psl")) {
                 jsonstring = event.getComponentId().replace("psl", "");
-                nextbuttonjsongrabbed = gson.fromJson( jsonstring, JsonObject.class);
+                nextbuttonjsongrabbed = gson.fromJson(jsonstring, JsonObject.class);
                 page = nextbuttonjsongrabbed.get("p").getAsInt() - 1;
 
-            }else {
+            } else {
                 jsonstring = event.getComponentId().replace("nsl", "");
-                nextbuttonjsongrabbed = gson.fromJson( jsonstring, JsonObject.class);
+                nextbuttonjsongrabbed = gson.fromJson(jsonstring, JsonObject.class);
                 page = nextbuttonjsongrabbed.get("p").getAsInt() + 1;
             }
             String args = nextbuttonjsongrabbed.get("a").getAsString();
-            Coincraftcore plugin = Coincraftcore.getPlugin(Coincraftcore.class);
+            CoincraftCore plugin = CoincraftCore.getPlugin(CoincraftCore.class);
             FileConfiguration config = plugin.getConfig();
             // Define API endpoint URL with required parameters
-            String endpointUrl = "https://mc.geekboy.cz/api/getshops.php?columns=id,material,shop_location_encoded,owner,price,count,items_in_storage&sort=material&limit=10" + args  + "&page=" + page;
+            String endpointUrl = "https://mc.geekboy.cz/api/getshops.php?columns=id,material,shop_location_encoded,owner,price,count,items_in_storage&sort=material&limit=10" + args + "&page=" + page;
             try {
                 // Create URL object for the page you want to get content from
                 URL url = new URL(endpointUrl);
@@ -180,7 +178,7 @@ public class shops extends ListenerAdapter {
                 JSONObject buttonjson = new JSONObject();
                 buttonjson.put("p", page);
                 buttonjson.put("a", args);
-                if (!response.toString().equals("No data found")){
+                if (!response.toString().equals("No data found")) {
                     eb.setTitle("Obchody odpovídající hledání:");
                     eb.setColor(new Color(15, 118, 187));
                     JsonArray jsonArray = gson.fromJson(response.toString(), JsonArray.class);
@@ -195,13 +193,13 @@ public class shops extends ListenerAdapter {
                         Location location = (Location) is.readObject();
                         String owner = jsonObject.get("owner").getAsString();
                         int items_in_storage = jsonObject.get("items_in_storage").getAsInt();
-                        eb.addField(material.replace('_', ' '), "💵 Cena: `" + price + "$ za " + count + "ks`\n🔗 Majitel: `" + owner + "`\n📦 Kusů na skladě: `" + items_in_storage + "`\n[zobrazit na mapě](https://map.majnr.cz/?worldname="+ location.getWorld().getName() +"&mapname=surface&zoom=7&x="+ location.getX()+"&y=" + location.getY() +"&z="+ location.getZ()+")", true);
+                        eb.addField(material.replace('_', ' '), "💵 Cena: `" + price + "$ za " + count + "ks`\n🔗 Majitel: `" + owner + "`\n📦 Kusů na skladě: `" + items_in_storage + "`\n[zobrazit na mapě](https://map.majnr.cz/?worldname=" + location.getWorld().getName() + "&mapname=surface&zoom=7&x=" + location.getX() + "&y=" + location.getY() + "&z=" + location.getZ() + ")", true);
                     }
                     Button previousbutton = Button.primary("psl" + buttonjson.toJSONString(), "◄");
-                    if (page == 1){
+                    if (page == 1) {
                         previousbutton = Button.primary("psl" + buttonjson.toJSONString(), "◄").asDisabled();
                     }
-                    if (jsonArray.size() < 10){
+                    if (jsonArray.size() < 10) {
                         event.editMessage("")
                                 .setEmbeds(eb.build())
                                 .setActionRow(
@@ -212,20 +210,20 @@ public class shops extends ListenerAdapter {
                                                 .asDisabled()
                                 )
                                 .queue();
-                    }else{
+                    } else {
 
                         event.editMessage("")
                                 .setActionRow(
                                         previousbutton,
                                         Button.secondary("pagecount", "Strana " + page)
                                                 .asDisabled(),
-                                        Button.primary( "nsl" + buttonjson.toJSONString(), "►")
+                                        Button.primary("nsl" + buttonjson.toJSONString(), "►")
 
                                 )
                                 .setEmbeds(eb.build())
                                 .queue();
                     }
-                }else{
+                } else {
                     eb.setTitle("⚠️ žádné obchody");
                     eb.setDescription("nebyly nalezeny žádné obchody s těmito parametry");
                     eb.setColor(Color.YELLOW);
@@ -242,14 +240,9 @@ public class shops extends ListenerAdapter {
                 }
 
 
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
-
-
 
 
         }

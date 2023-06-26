@@ -7,8 +7,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 
 public class PravitkoCancelBreak implements Listener {
     @EventHandler
-    public static void onPlacerBreakBlock(BlockBreakEvent event){
-        if (event.getPlayer().getItemInHand().getType() == Material.BONE){
+    public static void onPlacerBreakBlock(BlockBreakEvent event) {
+        if (event.getPlayer().getItemInHand().getType() == Material.BONE) {
             event.setCancelled(true);
         }
     }

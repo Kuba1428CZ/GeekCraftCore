@@ -1,6 +1,6 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
 
-import cz.kuba1428.coincraftcore.coincraftcore.Coincraftcore;
+import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
@@ -13,20 +13,24 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Random;
 import java.util.UUID;
 
 public class PlayerJoinSetup implements Listener {
 
     @EventHandler
-    public static void onPlayerJoin(PlayerJoinEvent event){
+    public static void onPlayerJoin(PlayerJoinEvent event) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection connection = DriverManager.getConnection(url, user, password);
             Statement stmnt = connection.createStatement();
-            Economy economy = Coincraftcore.getEconomy();
-            String statement = "INSERT IGNORE INTO " + config.getString("database.prefix") + "users (nick, money) VALUES ('"+ event.getPlayer().getName() +"'," + economy.getBalance(event.getPlayer().getName()) +")";
+            Economy economy = CoincraftCore.getEconomy();
+            String statement = "INSERT IGNORE INTO " + config.getString("database.prefix") + "users (nick, money) VALUES ('" + event.getPlayer().getName() + "'," + economy.getBalance(event.getPlayer().getName()) + ")";
             stmnt.executeUpdate(statement);
             UpdatePlayerBallance(event.getPlayer());
             try {
@@ -34,7 +38,7 @@ public class PlayerJoinSetup implements Listener {
 
                 statement = "SELECT discord, allow_access, rank FROM " + config.getString("database.prefix") + "users WHERE nick='" + event.getPlayer().getName() + "'";
                 ResultSet rs = stmnt.executeQuery(statement);
-                while (rs.next()){
+                while (rs.next()) {
                     Random rand = new Random();
                     int randominteger = rand.nextInt(900000) + 100000;
                     String kickmsg = "&9&lGeek&f&lCraft"
@@ -50,7 +54,7 @@ public class PlayerJoinSetup implements Listener {
                             + "\n&e" + randominteger;
 
 
-                    if (rs.getLong("discord") == 0){
+                    if (rs.getLong("discord") == 0) {
                         event.getPlayer().kickPlayer(ChatColor.translateAlternateColorCodes('&', kickmsg));
                         event.setJoinMessage("");
                         statement = "UPDATE " + config.getString("database.prefix") + "users SET verify_code = " + randominteger + " WHERE nick='" + event.getPlayer().getName() + "'";
@@ -62,7 +66,7 @@ public class PlayerJoinSetup implements Listener {
                         statement = "UPDATE " + config.getString("database.prefix") + "users SET verify_code = " + randominteger + " WHERE nick='" + event.getPlayer().getName() + "'";
                         stmnt = connection.createStatement();
                         stmnt.executeUpdate(statement);
-                    }else {
+                    } else {
                         LuckPerms lp = LuckPermsProvider.get();
                         Player player = event.getPlayer();
                         UUID uuid = player.getUniqueId();
@@ -73,18 +77,19 @@ public class PlayerJoinSetup implements Listener {
                         plugin.getLogger().info("aaaa" + rs.getString("rank"));
                     }
                 }
-            }catch (SQLException | ClassNotFoundException e){
+            } catch (SQLException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
             connection.close();
-        }catch (SQLException | ClassNotFoundException e){
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
     }
 
-        static Economy economy = Coincraftcore.getEconomy();
-    public static void UpdatePlayerBallance(Player player){
+    static Economy economy = CoincraftCore.getEconomy();
+
+    public static void UpdatePlayerBallance(Player player) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection connection = DriverManager.getConnection(url, user, password);
@@ -92,12 +97,13 @@ public class PlayerJoinSetup implements Listener {
             String statement = "UPDATE " + config.getString("database.prefix") + "users SET money = " + economy.getBalance(player) + " WHERE nick='" + player.getName() + "'";
             stmnt.executeUpdate(statement);
             connection.close();
-        }catch (SQLException | ClassNotFoundException e){
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
     }
-    static Coincraftcore plugin = Coincraftcore.getPlugin(Coincraftcore.class);
+
+    static CoincraftCore plugin = CoincraftCore.getPlugin(CoincraftCore.class);
     static FileConfiguration config = plugin.getConfig();
     static String user = config.getString("database.user");
     static String password = config.getString("database.password");
