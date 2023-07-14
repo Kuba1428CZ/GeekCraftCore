@@ -16,6 +16,7 @@ economy:
 discord:
   enabled: false
   token: "DISCORD SECRET HERE"
+  guild: 0
   roles:
     booster: null
     lite: null

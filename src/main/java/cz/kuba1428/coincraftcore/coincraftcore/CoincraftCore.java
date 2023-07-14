@@ -57,7 +57,7 @@ public final class CoincraftCore extends JavaPlugin {
                         .addEventListeners(new Shops())
                         .addEventListeners(new Voting())
                         .build().awaitReady();
-                Guild botguild = bot.getGuildById("1038506223542222928");
+                Guild botguild = bot.getGuildById(Objects.requireNonNull(getConfig().getString("discord.guild")));
                 if (botguild != null) {
                     botguild.upsertCommand("player", "zobrazí informace o hráči")
                             .addOption(OptionType.STRING, "nick", "nick hrace", true)
@@ -103,9 +103,9 @@ public final class CoincraftCore extends JavaPlugin {
         pm.registerEvents(new EditShopParameter(), this);
 
         //getCommand("dmsg").setExecutor(new dmsg());
-        Objects.requireNonNull(getCommand("shop")).setExecutor(new Shop());
+        Objects.requireNonNull(getCommand("obchod")).setExecutor(new Shop());
         Objects.requireNonNull(getCommand("verejne-prostredky")).setExecutor(new PublicResources());
-        Objects.requireNonNull(getCommand("shop")).setTabCompleter(new ShopCompleter());
+        Objects.requireNonNull(getCommand("obchod")).setTabCompleter(new ShopCompleter());
         //getCommand("dmsg").setTabCompleter(new dmsgcompleter());
         FileConfiguration config = this.getConfig();
         String user = config.getString("database.user");

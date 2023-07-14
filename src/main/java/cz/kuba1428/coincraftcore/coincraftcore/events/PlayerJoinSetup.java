@@ -5,6 +5,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.InheritanceNode;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -73,8 +74,9 @@ public class PlayerJoinSetup implements Listener {
                         User user = lp.getUserManager().getUser(uuid);
                         assert user != null;
                         user.data().clear(NodeType.INHERITANCE::matches);
+                        user.data().add(InheritanceNode.builder(rs.getString("rank")).build());
                         lp.getUserManager().saveUser(user);
-                        plugin.getLogger().info("aaaa" + rs.getString("rank"));
+                        plugin.getLogger().info("rank >> " + rs.getString("rank"));
                     }
                 }
             } catch (SQLException | ClassNotFoundException e) {
