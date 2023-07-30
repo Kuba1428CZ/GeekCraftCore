@@ -1,6 +1,8 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
 
 import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
+import cz.kuba1428.coincraftcore.coincraftcore.managers.DbManager;
+import cz.kuba1428.coincraftcore.coincraftcore.utils.GlobalVars;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,10 +34,8 @@ public class ShopBreak implements Listener {
         if (block.getType().equals(Material.CHEST) || block.getType().equals(Material.BARREL)) {
 
             try {
-                Connection conn = DriverManager.getConnection(url, user, password);
-                Statement stmt = conn.createStatement();
-                String sql = "SELECT * FROM " + config.getString("database.prefix") + "shops WHERE storage_location = '" + event.getBlock().getLocation().toString() + "'";
-                ResultSet rs = stmt.executeQuery(sql);
+
+                ResultSet rs = DbManager.ExecuteQuery("SELECT * FROM " + config.getString("database.prefix") + "shops WHERE storage_location = '" + event.getBlock().getLocation().toString() + "'");
                 boolean exist = false;
                 ArrayList<Block> blocks = new ArrayList<>();
                 while (rs.next()) {
@@ -70,8 +70,7 @@ public class ShopBreak implements Listener {
                         sgn.update();
                     }
                     event.getPlayer().sendMessage(ChatColor.YELLOW + "Obchody přidružené k tomuto úložišti byli zrušeny");
-                    sql = "DELETE FROM " + config.getString("database.prefix") + "shops WHERE storage_location = '" + event.getBlock().getLocation().toString() + "'";
-                    stmt.executeUpdate(sql);
+                    DbManager.ExecuteUpdate("DELETE FROM " + config.getString("database.prefix") + "shops WHERE storage_location = '" + event.getBlock().getLocation().toString() + "'");
                 }
                 rs.close();
 
@@ -81,10 +80,8 @@ public class ShopBreak implements Listener {
 
         } else if (event.getBlock().getType().toString().contains("SIGN")) {
             try {
-                Connection conn = DriverManager.getConnection(url, user, password);
-                Statement stmt = conn.createStatement();
-                String sql = "SELECT * FROM " + config.getString("database.prefix") + "shops WHERE shop_location = '" + event.getBlock().getLocation().toString() + "'";
-                ResultSet rs = stmt.executeQuery(sql);
+
+                ResultSet rs = DbManager.ExecuteQuery(                 "SELECT * FROM " + config.getString("database.prefix") + "shops WHERE shop_location = '" + event.getBlock().getLocation().toString() + "'");
 
                 ArrayList<String> signloc = new ArrayList<>();
                 while (rs.next()) {
@@ -104,10 +101,7 @@ public class ShopBreak implements Listener {
 
                 }
                 for (String str : signloc) {
-                    Connection conn2 = DriverManager.getConnection(url, user, password);
-                    Statement stmt2 = conn2.createStatement();
-                    String sql2 = "DELETE FROM " + config.getString("database.prefix") + "shops WHERE shop_location = '" + str + "'";
-                    stmt2.executeUpdate(sql2);
+                    DbManager.ExecuteUpdate(                    "DELETE FROM " + config.getString("database.prefix") + "shops WHERE shop_location = '" + str + "'");
                 }
 
 
@@ -123,10 +117,7 @@ public class ShopBreak implements Listener {
     }
 
     static CoincraftCore plugin = CoincraftCore.getPlugin(CoincraftCore.class);
-    static FileConfiguration config = plugin.getConfig();
-    static String user = config.getString("database.user");
-    static String password = config.getString("database.password");
-    static String url = "jdbc:mysql://" + config.getString("database.host") + ":" + config.getString("database.port") + "/" + config.getString("database.database");
+    static FileConfiguration config = GlobalVars.config;
 
 }
 

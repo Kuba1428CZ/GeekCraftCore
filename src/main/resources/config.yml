@@ -5,6 +5,8 @@ database:
   password: "password"
   database: "coincraft"
   prefix: "ccc_"
+regions:
+  cost_per_block: 1
 server:
   #Varování: Tato sekce nesmí být po prvním nastavení změněna nebo přestanou všechny stávající shopy na serveru fungovat
   id: "server"

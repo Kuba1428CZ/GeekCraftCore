@@ -12,6 +12,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -30,6 +31,7 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import static org.bukkit.Bukkit.getLogger;
               /* _/_/_/    _/_/_/
@@ -40,6 +42,7 @@ import static org.bukkit.Bukkit.getLogger;
 
 
 public class Shop implements CommandExecutor {
+
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String expression, @NotNull String[] args) {

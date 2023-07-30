@@ -1,6 +1,7 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
 
 import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
+import cz.kuba1428.coincraftcore.coincraftcore.managers.DbManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -51,12 +52,10 @@ public class EditShopParameter implements Listener {
             player.sendMessage("dddd");
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
-                Connection connection = DriverManager.getConnection(url, user, password);
-                Statement stmnt = connection.createStatement();
-                String statement = "UPDATE " + config.getString("database.prefix") + "shops  SET price=" + msg + " WHERE id=" + id;
-                stmnt.executeUpdate(statement);
-                statement = "SELECT * FROM " + config.getString("database.prefix") + "shops WHERE id=" + id;
-                ResultSet rs = stmnt.executeQuery(statement);
+
+                DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops  SET price=" + msg + " WHERE id=" + id);
+                ResultSet rs = DbManager.ExecuteQuery("SELECT * FROM " + config.getString("database.prefix") + "shops WHERE id=" + id);
+
                 while (rs.next()) {
                     String shop_loc_en = rs.getString("shop_location_encoded");
                     byte[] itemSerialized = Base64.getDecoder().decode(shop_loc_en);

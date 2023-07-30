@@ -1,20 +1,23 @@
 name: CoinCraftCore
 version: '${project.version}'
-main: cz.kuba1428.coincraftcore.coincraftcore.Coincraftcore
+main: cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore
 api-version: 1.18
 prefix: CCC
 softdepend:
   - CMI
+  - LuckPerms
+  - Vault
+  - Residence
 commands:
-  dmsg:
-    usage: /<command> <msg>
-    permission: coincraftcore.commands.player.dmsg
-    description: sends message to discord
-  shop:
-    usage: /<command> <prodej/vykup> <pocet-ks> <cena>
+  pozemek:
+    usage: /pozemek
+    description: administrace pozemku
+    permission: coincraftcore.commands.player.pozemek
+  obchod:
+    usage: /obchod <prodej/vykup> <pocet-ks> <cena>
     description: Create a shop
     permission: coincraftcore.commands.player.shop
   verejne-prostredky:
-    usage: /<command>
-    description: Check's the wealth of the
+    usage: /verejne-prostredky
+    description: Check's the wealth of the state
     permission: coincraftcore.commands.player.verejne-prostredky

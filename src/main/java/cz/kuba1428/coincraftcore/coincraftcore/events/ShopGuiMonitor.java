@@ -1,6 +1,7 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
 
 import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
+import cz.kuba1428.coincraftcore.coincraftcore.managers.DbManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -44,9 +45,6 @@ public class ShopGuiMonitor implements Listener {
                 if (data.has(newKey("isshop"), PersistentDataType.INTEGER)) {
                     if (data.get(newKey("isshop"), PersistentDataType.INTEGER).equals(1)) {
                         FileConfiguration config = plugin.getConfig();
-                        String user = config.getString("database.user");
-                        String password = config.getString("database.password");
-                        String url = "jdbc:mysql://" + config.getString("database.host") + ":" + config.getString("database.port") + "/" + config.getString("database.database");
                         String owner = null;
 
                         String storage_loc_encoded = null;
@@ -58,10 +56,8 @@ public class ShopGuiMonitor implements Listener {
 
 
                         try {
-                            Class.forName("com.mysql.cj.jdbc.Driver");
-                            Connection connection = DriverManager.getConnection(url, user, password);
-                            Statement statement = connection.createStatement();
-                            ResultSet resultSet = statement.executeQuery("SELECT owner, shop_location, storage_location_encoded, itemstack, shop_type, price, count, locked, items_in_storage FROM " + config.getString("database.prefix") + "shops WHERE shop_location='" + event.getClickedBlock().getLocation().toString() + "'");
+
+                            ResultSet resultSet = DbManager.ExecuteQuery("SELECT owner, shop_location, storage_location_encoded, itemstack, shop_type, price, count, locked, items_in_storage FROM " + config.getString("database.prefix") + "shops WHERE shop_location='" + event.getClickedBlock().getLocation().toString() + "'");
                             if (!resultSet.next()) {
                                 event.getPlayer().sendMessage(ChatColor.DARK_RED + "Obchod nelze otevřít z důvodu poškozeného nebo neexistujicího databázového záznamu. Prosím kontaktuj Technický Team serveru");
                                 return;
@@ -76,7 +72,7 @@ public class ShopGuiMonitor implements Listener {
 
 
                             }
-                            statement.close();
+
                         } catch (Exception e) {
                             getLogger().warning("Nastaly problémy při připojování k databázi: " + e);
                         }

@@ -1,6 +1,7 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
 
 import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
+import cz.kuba1428.coincraftcore.coincraftcore.managers.DbManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -50,14 +51,8 @@ public class ShopClickHandle implements Listener {
                 Integer count = null;
                 Integer items_in_storage = null;
                 try {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection connection = DriverManager.getConnection(url, user, password);
-                    Statement stmnt = connection.createStatement();
-
-
-                    ResultSet rs = stmnt.executeQuery("SELECT storage_location_encoded, shop_type, owner, id, price, count, items_in_storage FROM " + config.getString("database.prefix") + "shops WHERE shop_location='" + blockLocation.toString() + "' AND server='" + config.getString("server.id") + "'");
+                    ResultSet rs = DbManager.ExecuteQuery("SELECT storage_location_encoded, shop_type, owner, id, price, count, items_in_storage FROM " + config.getString("database.prefix") + "shops WHERE shop_location='" + blockLocation.toString() + "' AND server='" + config.getString("server.id") + "'");
                     while (rs.next()) {
-                        //String firstName = rs.getString("first_name");
                         storage_location_encoded = rs.getString("storage_location_encoded");
                         price = rs.getInt("price");
                         count = rs.getInt("count");
@@ -100,29 +95,17 @@ public class ShopClickHandle implements Listener {
                         String loc = event.getWhoClicked().getTargetBlock(null, 5).getLocation().toString();
                         ArrayList<String> lore = new ArrayList<>();
                         if (item.getType().equals(Material.RED_DYE)) {
-                            try {
-                                Class.forName("com.mysql.cj.jdbc.Driver");
-                                Connection connection = DriverManager.getConnection(url, user, password);
-                                Statement stmnt = connection.createStatement();
-                                stmnt.executeUpdate("UPDATE " + config.getString("database.prefix") + "shops SET locked = 0 WHERE shop_location='" + loc + "'");
-                                lore.add(ChatColor.WHITE + "Kliknutím znemožníš ostatním");
-                                lore.add(ChatColor.WHITE + "hráčům používat tvůj obchod");
-                                inv.setItem(0, newItem("&c&lUzamknout obchod", Material.LIME_DYE, lore));
-                            } catch (SQLException e) {
-                                plugin.getLogger().warning(e.toString());
-                            }
+
+                            DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET locked = 0 WHERE shop_location='" + loc + "'");
+                            lore.add(ChatColor.WHITE + "Kliknutím znemožníš ostatním");
+                            lore.add(ChatColor.WHITE + "hráčům používat tvůj obchod");
+                            inv.setItem(0, newItem("&c&lUzamknout obchod", Material.LIME_DYE, lore));
                         } else {
-                            try {
-                                Class.forName("com.mysql.cj.jdbc.Driver");
-                                Connection connection = DriverManager.getConnection(url, user, password);
-                                Statement stmnt = connection.createStatement();
-                                stmnt.executeUpdate("UPDATE " + config.getString("database.prefix") + "shops SET locked = 1 WHERE shop_location='" + loc + "'");
-                                lore.add(ChatColor.WHITE + "Kliknutím umožníš ostatním");
-                                lore.add(ChatColor.WHITE + "hráčům používat tvůj obchod");
-                                inv.setItem(0, newItem("&a&lOdemknout obchod", Material.RED_DYE, lore));
-                            } catch (SQLException e) {
-                                plugin.getLogger().warning(e.toString());
-                            }
+
+                            DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET locked = 1 WHERE shop_location='" + loc + "'");
+                            lore.add(ChatColor.WHITE + "Kliknutím umožníš ostatním");
+                            lore.add(ChatColor.WHITE + "hráčům používat tvůj obchod");
+                            inv.setItem(0, newItem("&a&lOdemknout obchod", Material.RED_DYE, lore));
 
                         }
                     }
@@ -133,27 +116,17 @@ public class ShopClickHandle implements Listener {
                         lore.add(ChatColor.WHITE + "Umožňuje přepnout mezi");
                         lore.add(ChatColor.WHITE + "prodejem a výkupem");
                         lore.add("");
+                        assert shop_type != null;
                         if (shop_type.equals("prodej")) {
-                            try {
-                                Class.forName("com.mysql.cj.jdbc.Driver");
-                                Connection connection = DriverManager.getConnection(url, user, password);
-                                Statement stmnt = connection.createStatement();
-                                stmnt.executeUpdate("UPDATE " + config.getString("database.prefix") + "shops SET shop_type = 'výkup' WHERE shop_location='" + loc + "'");
-                                lore.add(ChatColor.translateAlternateColorCodes('&', "&fKlikni pro změnu na: &aprodej"));
-                            } catch (SQLException e) {
-                                plugin.getLogger().warning(e.toString());
-                            }
+
+                            DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET shop_type = 'výkup' WHERE shop_location='" + loc + "'");
+                            lore.add(ChatColor.translateAlternateColorCodes('&', "&fKlikni pro změnu na: &aprodej"));
                         } else {
-                            try {
-                                Class.forName("com.mysql.cj.jdbc.Driver");
-                                Connection connection = DriverManager.getConnection(url, user, password);
-                                Statement stmnt = connection.createStatement();
-                                stmnt.executeUpdate("UPDATE " + config.getString("database.prefix") + "shops SET shop_type = 'prodej' WHERE shop_location='" + loc + "'");
+
+                                DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET shop_type = 'prodej' WHERE shop_location='" + loc + "'");
                                 lore.add(ChatColor.translateAlternateColorCodes('&', "&fKlikni pro změnu na: &avýkup"));
 
-                            } catch (SQLException e) {
-                                plugin.getLogger().warning(e.toString());
-                            }
+
 
                         }
                         inv.setItem(3, newItem("&e&lZměnit typ obchodu", Material.ITEM_FRAME, lore));
@@ -186,28 +159,21 @@ public class ShopClickHandle implements Listener {
                         if (getAmount(storage_inventory, event.getInventory().getItem(4)) >= itm_count) {
                             if (getFreeSpaceInPlayerInventory(player.getInventory(), event.getInventory().getItem(4)) >= itm_count) {
 
-                                try {
-                                    Class.forName("com.mysql.cj.jdbc.Driver");
-                                    Connection connection = DriverManager.getConnection(url, user, password);
-                                    Statement stmnt = connection.createStatement();
-                                    stmnt.executeUpdate("UPDATE " + config.getString("database.prefix") + "shops SET items_in_storage='" + getAmount(storage_inventory, event.getInventory().getItem(4)) + "' WHERE id='" + id + "'");
-                                    ItemStack itm_with_amount = event.getInventory().getItem(4).clone();
-                                    itm_with_amount.setAmount(itm_count);
-                                    storage_inventory.removeItem(itm_with_amount);
-                                    player.getInventory().addItem(itm_with_amount);
-                                    economy.withdrawPlayer(player, cost);
-                                    economy.depositPlayer(owner, cost - cost * config.getDouble("economy.shop_tax"));
-                                    double old_value = config.getDouble("economy.current_central_money");
-                                    Double new_value = old_value + cost * config.getDouble("economy.shop_tax");
-                                    config.set("economy.current_central_money", new_value);
-                                    if (plugin.getServer().getPlayer(owner).isOnline()) {
-                                        plugin.getServer().getPlayer(owner).sendMessage(ChatColor.GREEN + "Hráč " + player.getName() + " si od tebe koupil " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase());
-                                    }
-                                    player.sendMessage(ChatColor.GREEN + "Koupil jsi " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase() + "od hráče " + owner);
-                                    plugin.saveConfig();
-                                } catch (SQLException e) {
-                                    plugin.getLogger().warning(e.toString());
+                                DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET items_in_storage='" + getAmount(storage_inventory, event.getInventory().getItem(4)) + "' WHERE id='" + id + "'");
+                                ItemStack itm_with_amount = event.getInventory().getItem(4).clone();
+                                itm_with_amount.setAmount(itm_count);
+                                storage_inventory.removeItem(itm_with_amount);
+                                player.getInventory().addItem(itm_with_amount);
+                                economy.withdrawPlayer(player, cost);
+                                economy.depositPlayer(owner, cost - cost * config.getDouble("economy.shop_tax"));
+                                double old_value = config.getDouble("economy.current_central_money");
+                                Double new_value = old_value + cost * config.getDouble("economy.shop_tax");
+                                config.set("economy.current_central_money", new_value);
+                                if (plugin.getServer().getPlayer(owner).isOnline()) {
+                                    plugin.getServer().getPlayer(owner).sendMessage(ChatColor.GREEN + "Hráč " + player.getName() + " si od tebe koupil " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase());
                                 }
+                                player.sendMessage(ChatColor.GREEN + "Koupil jsi " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase() + "od hráče " + owner);
+                                plugin.saveConfig();
 
                             } else {
                                 player.sendMessage(ChatColor.RED + "Nemáš dost místa v inventáři");
@@ -247,28 +213,21 @@ public class ShopClickHandle implements Listener {
                         if (getAmount(player.getInventory(), event.getInventory().getItem(4)) >= itm_count) {
                             if (getFreeSpace(storage_inventory, event.getInventory().getItem(4)) >= itm_count) {
 
-                                try {
-                                    Class.forName("com.mysql.cj.jdbc.Driver");
-                                    Connection connection = DriverManager.getConnection(url, user, password);
-                                    Statement stmnt = connection.createStatement();
-                                    stmnt.executeUpdate("UPDATE " + config.getString("database.prefix") + "shops SET items_in_storage='" + getAmount(storage_inventory, event.getInventory().getItem(4)) + "' WHERE id='" + id + "'");
-                                    ItemStack itm_with_amount = event.getInventory().getItem(4).clone();
-                                    itm_with_amount.setAmount(itm_count);
-                                    player.getInventory().removeItem(itm_with_amount);
-                                    storage_inventory.addItem(itm_with_amount);
-                                    economy.withdrawPlayer(owner, cost);
-                                    economy.depositPlayer(player, cost - cost * config.getDouble("economy.shop_tax"));
-                                    double old_value = config.getDouble("economy.current_central_money");
-                                    Double new_value = old_value + cost * config.getDouble("economy.shop_tax");
-                                    config.set("economy.current_central_money", new_value);
-                                    if (plugin.getServer().getPlayer(owner).isOnline()) {
-                                        plugin.getServer().getPlayer(owner).sendMessage(ChatColor.GREEN + "Hráč " + player.getName() + " ti prodal " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase());
-                                    }
-                                    player.sendMessage(ChatColor.GREEN + "Prodal jsi " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase() + " hráči " + owner);
-                                    plugin.saveConfig();
-                                } catch (SQLException e) {
-                                    plugin.getLogger().warning(e.toString());
+                                DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET items_in_storage='" + getAmount(storage_inventory, event.getInventory().getItem(4)) + "' WHERE id='" + id + "'");
+                                ItemStack itm_with_amount = event.getInventory().getItem(4).clone();
+                                itm_with_amount.setAmount(itm_count);
+                                player.getInventory().removeItem(itm_with_amount);
+                                storage_inventory.addItem(itm_with_amount);
+                                economy.withdrawPlayer(owner, cost);
+                                economy.depositPlayer(player, cost - cost * config.getDouble("economy.shop_tax"));
+                                double old_value = config.getDouble("economy.current_central_money");
+                                Double new_value = old_value + cost * config.getDouble("economy.shop_tax");
+                                config.set("economy.current_central_money", new_value);
+                                if (plugin.getServer().getPlayer(owner).isOnline()) {
+                                    plugin.getServer().getPlayer(owner).sendMessage(ChatColor.GREEN + "Hráč " + player.getName() + " ti prodal " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase());
                                 }
+                                player.sendMessage(ChatColor.GREEN + "Prodal jsi " + itm_count + "x " + itm_with_amount.getType().toString().toLowerCase() + " hráči " + owner);
+                                plugin.saveConfig();
 
                             } else {
                                 player.sendMessage(ChatColor.RED + "V obchodě není dost místa");
@@ -291,9 +250,6 @@ public class ShopClickHandle implements Listener {
 
     static CoincraftCore plugin = CoincraftCore.getPlugin(CoincraftCore.class);
     static FileConfiguration config = plugin.getConfig();
-    static String user = config.getString("database.user");
-    static String password = config.getString("database.password");
-    static String url = "jdbc:mysql://" + config.getString("database.host") + ":" + config.getString("database.port") + "/" + config.getString("database.database");
 
     public static Integer getAmount(Inventory inventory, ItemStack item) {
 

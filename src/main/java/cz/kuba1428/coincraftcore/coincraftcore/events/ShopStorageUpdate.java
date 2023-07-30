@@ -1,6 +1,7 @@
 package cz.kuba1428.coincraftcore.coincraftcore.events;
 
 import cz.kuba1428.coincraftcore.coincraftcore.CoincraftCore;
+import cz.kuba1428.coincraftcore.coincraftcore.managers.DbManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Barrel;
@@ -30,10 +31,8 @@ public class ShopStorageUpdate implements Listener {
         if (inv.getHolder() instanceof Chest || inv.getHolder() instanceof Barrel) {
             Location loc = ((Container) inv.getHolder()).getLocation();
             try {
-                Connection conn = DriverManager.getConnection(url, user, password);
-                Statement stmt = conn.createStatement();
-                String sql = "SELECT * FROM " + config.getString("database.prefix") + "shops WHERE storage_location = '" + loc.toString() + "'";
-                ResultSet rs = stmt.executeQuery(sql);
+
+                ResultSet rs = DbManager.ExecuteQuery("SELECT * FROM " + config.getString("database.prefix") + "shops WHERE storage_location = '" + loc.toString() + "'");
                 boolean exists = false;
                 while (rs.next()) {
                     int id = rs.getInt("id");
@@ -41,11 +40,8 @@ public class ShopStorageUpdate implements Listener {
                     ByteArrayInputStream in = new ByteArrayInputStream(itemSerialized);
                     BukkitObjectInputStream is = new BukkitObjectInputStream(in);
                     ItemStack stack = (ItemStack) is.readObject();
-                    Connection conn2 = DriverManager.getConnection(url, user, password);
-                    Statement stmt2 = conn2.createStatement();
 
-                    sql = "UPDATE " + config.getString("database.prefix") + "shops SET items_in_storage = " + getAmount(event.getInventory(), stack) + " WHERE id = '" + id + "'";
-                    stmt2.executeUpdate(sql);
+                    DbManager.ExecuteUpdate("UPDATE " + config.getString("database.prefix") + "shops SET items_in_storage = " + getAmount(event.getInventory(), stack) + " WHERE id = '" + id + "'");
                     exists = true;
                 }
                 if (exists) {
@@ -59,9 +55,6 @@ public class ShopStorageUpdate implements Listener {
 
     static CoincraftCore plugin = CoincraftCore.getPlugin(CoincraftCore.class);
     static FileConfiguration config = plugin.getConfig();
-    static String user = config.getString("database.user");
-    static String password = config.getString("database.password");
-    static String url = "jdbc:mysql://" + config.getString("database.host") + ":" + config.getString("database.port") + "/" + config.getString("database.database");
 
     public static Integer getAmount(Inventory inventory, ItemStack item) {
 

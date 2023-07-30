@@ -2,6 +2,8 @@ package cz.kuba1428.coincraftcore.coincraftcore;
 
 import cz.kuba1428.coincraftcore.coincraftcore.commands.PublicResources;
 import cz.kuba1428.coincraftcore.coincraftcore.commands.Shop;
+import cz.kuba1428.coincraftcore.coincraftcore.commands.pozemek;
+import cz.kuba1428.coincraftcore.coincraftcore.completers.PozemekCompleter;
 import cz.kuba1428.coincraftcore.coincraftcore.completers.ShopCompleter;
 import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Online;
 import cz.kuba1428.coincraftcore.coincraftcore.discord.commands.Player;
@@ -18,6 +20,7 @@ import cz.kuba1428.coincraftcore.coincraftcore.events.ShopBreak;
 import cz.kuba1428.coincraftcore.coincraftcore.events.ShopClickHandle;
 import cz.kuba1428.coincraftcore.coincraftcore.events.ShopGuiMonitor;
 import cz.kuba1428.coincraftcore.coincraftcore.events.ShopStorageUpdate;
+import cz.kuba1428.coincraftcore.coincraftcore.managers.DbManager;
 import cz.kuba1428.coincraftcore.coincraftcore.recipes.RulerCrafting;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -101,21 +104,15 @@ public final class CoincraftCore extends JavaPlugin {
         pm.registerEvents(new LogikaPravitka(), this);
         pm.registerEvents(new PlayerJoinSetup(), this);
         pm.registerEvents(new EditShopParameter(), this);
-
-        //getCommand("dmsg").setExecutor(new dmsg());
         Objects.requireNonNull(getCommand("obchod")).setExecutor(new Shop());
         Objects.requireNonNull(getCommand("verejne-prostredky")).setExecutor(new PublicResources());
         Objects.requireNonNull(getCommand("obchod")).setTabCompleter(new ShopCompleter());
-        //getCommand("dmsg").setTabCompleter(new dmsgcompleter());
+        Objects.requireNonNull(getCommand("pozemek")).setExecutor(new pozemek());
+        Objects.requireNonNull(getCommand("pozemek")).setTabCompleter(new PozemekCompleter());
         FileConfiguration config = this.getConfig();
-        String user = config.getString("database.user");
-        String password = config.getString("database.password");
-        String url = "jdbc:mysql://" + config.getString("database.host") + ":" + config.getString("database.port") + "/" + config.getString("database.database");
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection(url, user, password);
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("create table IF NOT EXISTS `" + config.getString("database.prefix") + "users` (\n" +
+            try {
+
+            DbManager.ExecuteUpdate("create table IF NOT EXISTS `" + config.getString("database.prefix") + "users` (\n" +
                     "  `id` int unsigned not null auto_increment primary key,\n" +
                     "  `nick` VARCHAR(255) not null UNIQUE,\n" +
                     "  `money` INT not null default 0,\n" +
@@ -124,7 +121,7 @@ public final class CoincraftCore extends JavaPlugin {
                     "  `verify_code` INT default null UNIQUE,\n" +
                     "  `rank` VARCHAR(255) default null\n" +
                     ");");
-            statement.executeUpdate("create table if not exists `" + config.getString("database.prefix") + "shops` (\n" +
+            DbManager.ExecuteUpdate("create table if not exists `" + config.getString("database.prefix") + "shops` (\n" +
                     "  `id` int unsigned not null auto_increment primary key,\n" +
                     "  `owner` VARCHAR(255) not null,\n" +
                     "  `server` varchar(255) not null,\n" +
@@ -142,15 +139,14 @@ public final class CoincraftCore extends JavaPlugin {
                     "  `nickname` VARCHAR(255)\n" +
 
                     ")");
-            statement.executeUpdate("create table if not exists `" + config.getString("database.prefix") + "warez_allowed` (\n" +
+                DbManager.ExecuteUpdate("create table if not exists `" + config.getString("database.prefix") + "warez_allowed` (\n" +
                     "  `id` int unsigned not null auto_increment primary key,\n" +
                     "  `nick` VARCHAR(255) not null\n" +
                     ")");
-            statement.close();
         } catch (Exception e) {
             getLogger().warning("Nastaly problémy při připojování k databázi: " + e);
         }
-        getLogger().info("Coin Craft Core sucessfully enabled!");
+        getLogger().info("CoinCraftCore sucessfully enabled!");
     }
 
     @Override
